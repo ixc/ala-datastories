@@ -18,7 +18,7 @@
             layer-type="base"
             :detectRetina="true">
       </l-wms-tile-layer>
-      
+
     <!-- search area circle -->
       <l-circle ref="circle" :lat-lng="localCenter" :radius="filterRadiusMeters" :color="'#c44d34'" :fill="false" :weight=2 :dashArray="'5 10'"/>
 
@@ -36,12 +36,12 @@
         />
         <l-popup :className="'hexMapPopup'" offset="[0,30]">
           <ObsTile :obs-data="o" popup="true" @show-modal="passModal"/>
-        </l-popup>    
+        </l-popup>
 
       </l-marker>
 
 
-      <Teleport to="#map .leaflet-container .leaflet-tooltip-pane">  
+      <Teleport to="#map .leaflet-container .leaflet-tooltip-pane">
           <div v-if="mapIsReady && mapIsZooming==false" id="radiusHandle" :style="{'left': dragHandlePos.x +'px', 'top': dragHandlePos.y + 'px'}" @touchstart="radiusHandleDragStart" @touchend="radiusHandleDragEnd" @mousedown="radiusHandleDragStart" @mouseup="radiusHandleDragEnd" @touchmove="dragThrottled">
               <img :src="`${siteRoot}/markers/drag-handle.png`" draggable="false">
           </div>
@@ -63,6 +63,7 @@
   import { LMap, LTileLayer, LWmsTileLayer, LCircleMarker, LCircle, LPopup, LControlZoom, LMarker, LIcon } from "@vue-leaflet/vue-leaflet";
   import ObsTile from '../components/ObsTile.vue';
   import {throttle} from '../throttle.js';
+  import { extraFq } from '../apiConfig.js';
 
   export default {
     components: {
@@ -97,17 +98,17 @@
       zoom:{},
       filterCenter:{},
       filterRadius:{},
-     
+
     },
 
     data() {
       return {
         map:null,
         mapCenter: {lat: -25.344490, lng: 131.035431},
-        mapOptions: { attributionControl: false, 
-                      zoomControl:false, 
-                      doubleClickZoom:false, 
-                      scrollWheelZoom:false, 
+        mapOptions: { attributionControl: false,
+                      zoomControl:false,
+                      doubleClickZoom:false,
+                      scrollWheelZoom:false,
                       dragging:true},
         focusMarkerId:"",
         bounceMarkerId:"",
@@ -140,7 +141,8 @@
         const base = 'https://api.ala.org.au/occurrences/mapping/wms/reflect?&q='
         const colstring = this.mapBins[0].col+","+this.mapBins[0].count+","+this.mapBins[1].col+","+this.mapBins[1].count+","+this.mapBins[2].col+","+this.mapBins[2].count+","+this.mapBins[3].col+","+this.mapBins[3].count+","+this.mapBins[4].col;
         const envString = encodeURIComponent("size:3;colormode:hexbin;color:"+colstring);
-        return encodeURI(base+this.query+"&outline=false&ENV="+envString);
+        const fqString = extraFq ? '&fq=' + encodeURIComponent(extraFq) : '';
+        return encodeURI(base+this.query+"&outline=false&ENV="+envString) + fqString;
       },
 
       mapBins(){
@@ -256,12 +258,12 @@
           getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
             var R = 6371; // Radius of the earth in km
             var dLat = this.deg2rad(lat2-lat1);  // deg2rad below
-            var dLon = this.deg2rad(lon2-lon1); 
-            var a = 
+            var dLon = this.deg2rad(lon2-lon1);
+            var a =
               Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2); 
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+              Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             var d = R * c; // Distance in km
             return d;
           },
@@ -366,7 +368,7 @@
       this.$nextTick(() => {
         this.map = this.$refs.map.leafletObject;
       })
-    
+
     }
 
 
@@ -424,7 +426,7 @@
     button.geoFocus{
     background:none;
     border:none;
-    
+
     margin:0 0.25rem;
     cursor:pointer;
     position:absolute;
@@ -452,7 +454,7 @@
     border: 2px dashed var(--ala-orange);
     margin:0.2rem;
     position:relative;
-    
+
 
   }
 
@@ -467,5 +469,5 @@
   button.geoFocus:hover .ring p{
     font-weight: 600;
   }
-  
+
 </style>

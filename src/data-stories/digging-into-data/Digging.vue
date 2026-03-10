@@ -236,7 +236,7 @@
       methods:{
 
         loadDataResources(){
-          axios.get("https://api.ala.org.au/occurrences/occurrences/facets?q=%2A&facets=dataResourceUid&flimit=2000&fsort=count&qualityProfile=ALA")
+          axios.get('https://api.ala.org.au/occurrences/occurrences/facets?',{params:{q:'*',facets:'dataResourceUid',flimit:2000,fsort:'count',qualityProfile:'ALA'}})
           .then((response) => {
             console.log(response.data)
             this.dataResources = response.data[0].fieldResult;
