@@ -12,14 +12,15 @@
   import axios from 'axios'
   import { apiState } from './apiState.js'
   import speciesGroups from './assets/data/speciesGroups.json'
+  import { extraFq } from './apiConfig.js'
 </script>
 
 <template>
 
     <Menu home-path="."/>
- 
-    <section>
-       <div class="content-wrapper landing"> 
+
+    <section v-if="!extraFq">
+       <div class="content-wrapper landing">
          <!-- <h1>ALA <img src="./assets/img/title-asterisk.svg" class="title-asterisk"> Explorer Hub</h1>  -->
 
          <h1>ALA<span class="logotype">
@@ -27,15 +28,15 @@
         </h1>
          <h2 class="tagline">New views of the Atlas of Living Australia</h2>
 
-         
+
          <div class="intro-wrap">
           <img src="./assets/img/bubble-concrete.png" class="landing-bubble" alt="Nested circles showing images of Australian wildlife and flora">
 
           <div class="intro-text">
-            <p>Try out new views of the ALA, designed to encourage exploration and discovery of species, data and place.</p> 
+            <p>Try out new views of the ALA, designed to encourage exploration and discovery of species, data and place.</p>
             <p>This site presents outcomes of a research partnership with the Australian National University that aims to investigate and enrich user experiences of biodiversity data. </p>
 
-            <p class="image-credits">Images (all CC-BY-NC): 
+            <p class="image-credits">Images (all CC-BY-NC):
               Kai Squires, andrewpavlov, mikegrow,
               kerrbrad, Matt Campbell, Toby Esplin,
               darcywhittaker
@@ -47,7 +48,7 @@
 
         <h2>Data Stories</h2>
         <h4>Dive into data in the ALA with these interactive investigations</h4>
-        
+
         <div class="ds-tile-wrap">
           <a class="ds-tile" href="data-stories/digging-into-data/">
             <h4>
@@ -57,7 +58,7 @@
             <p>This ALA is made of biodiversity data; but where does this data come from?</p>
           </a>
 
-         
+
             <a class="ds-tile" href="data-stories/threatened-species/">
               <h4>
                  Threatened Species
@@ -86,20 +87,29 @@
       </div>
     </section>
 
+    <section v-if="extraFq">
+      <div class="content-wrapper landing">
+        <h2>Lens<img src="./assets/img/lens.svg" class="title-logo" alt="">Interface</h2>
+        <h4>Browse, discover, facet and filter: the Lens interface is a new way to explore the ALA. Start at one of our favourite spots, or</h4>
+
+        <button @click="locateMe">Use my location</button>
+      </div>
+    </section>
+
 
     <div class="focusInfoBar">
       <div class="obsCountWrapper">
-        <h4 v-if="queryLoaded">{{occurrenceData ? formatCount(occurrenceData.totalRecords) : 0}}</h4> 
+        <h4 v-if="queryLoaded">{{occurrenceData ? formatCount(occurrenceData.totalRecords) : 0}}</h4>
         <span class="countLabel" v-if="queryLoaded">occurrences</span>
         <h4 v-if="!queryLoaded">...</h4>
         <span class="countLabel" v-if="!queryLoaded">loading</span>
-      </div> 
+      </div>
       <div class="filterTagWrapper">
         <div class="filterTag" v-for="f in apiState.filters" :class="{group:f.fieldLabel=='Lifeform'}">
-          <p class="label">{{f.fieldLabel.includes("Status") ? "status" : f.fieldLabel.toLowerCase() }}</p> 
+          <p class="label">{{f.fieldLabel.includes("Status") ? "status" : f.fieldLabel.toLowerCase() }}</p>
           <p class="value">
             <img v-if="f.icon" class="groupIcon" :src="`${siteRoot}/icons/${f.icon}`"/>
-            {{f.valueLabel}} 
+            {{f.valueLabel}}
             <a v-if="f.fieldLabel=='Species'" class="speciesInfo" :href="'https://bie.ala.org.au/species/'+f.value" target="_blank"><img src="./assets/img/species-info-reverse.svg"></a>
           </p>
           <span class="close" @click="apiState.removeFilter(f)">&#215;</span>
@@ -116,7 +126,7 @@
 
 
 
-       
+
         <div class="obsTileWrapper" ref="tilewrapper" v-if="occurrenceData">
 
           <div class="obsTiles">
@@ -208,11 +218,11 @@
 <script>
   export default {
     data() {
-      return {  queryParams:{ q:"*", 
-                  pageSize:100, 
+      return {  queryParams:{ q:"*",
+                  pageSize:100,
                   spatiallyValid:true,
                   qualityProfile:"ALA",
-                  sort:"eventDate", 
+                  sort:"eventDate",
                   dir:"desc",
                   fsort:"count",
                   flimit:200,
@@ -296,7 +306,7 @@
         this.mapZoom = this.initLoc.zoom;
         this.mapBins = this.$refs.hexmap.mapBins;
       },
-      
+
       queryApi(){
         this.queryLoaded = false;
         // check if we have stored data in the cache, use it if so
@@ -341,14 +351,14 @@
           });
         });
       },
-    
+
       async locateMe() {
         this.gettingUserLocation = true;
         try {
           this.gettingUserLocation = false;
           this.userLocation = await this.getLocation();
           let mapradius = this.$refs.hexmap.getViewRadius();
-          
+
           this.setGeoFilter({lat: this.userLocation.coords.latitude, lon: this.userLocation.coords.longitude, radius:mapradius })
           // zoom the map to the filter location
           console.log("geolocation, fit radius")
@@ -540,7 +550,7 @@
     text-decoration: none;
     border: 1px solid var(--ala-orange);
 
-    
+
 
   }
 
@@ -555,7 +565,7 @@
 
   .ds-tile img{
     height:40px;
-    
+
 
   }
 
@@ -782,7 +792,7 @@
   display:flex;
  }
 
-  
+
   .filterTag{
     display: inline;
     background-color: white;
@@ -795,7 +805,7 @@
 
     box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.2);
     font-weight: 400;
-    
+
     border: 0.5px solid rgba(0,0,0,0.2);
     min-width:60px;
   }
@@ -973,6 +983,6 @@
 
 
 </style>
-  
+
 
 

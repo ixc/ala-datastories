@@ -4,6 +4,7 @@
     <div class="credits">
       ALA Lens is an outcome of <em>Redesigning Digital Biodiversity Experience</em>, a research project undertaken by Mitchell Whitelaw and Adrian Mackenzie of the Australian National University, supported by the Atlas of Living Australia. First published August 2024. Version 1.0.2, October 2025.
     </div>
+    <template v-if="!extraFq">
 	<hr>
 
     <div class="footer-container column-screen page-columns page-full">
@@ -107,17 +108,20 @@
       </div><!-- row end -->
 
   </div>
+    </template>
   </footer>
 </template>
 
 <script>
+import { extraFq } from '../apiConfig.js'
+
 export default {
 
   name: 'Footer',
 
   data () {
     return {
-
+      extraFq,
     }
   }
 }

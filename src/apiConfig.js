@@ -19,3 +19,24 @@
 
 const urlParams = new URLSearchParams(window.location.search)
 export const extraFq = urlParams.get('fq') || import.meta.env.VITE_EXTRA_FQ || ''
+
+/**
+ * Lifeform display mode derived from extraFq:
+ *   'all'    – no collection filter or institution filter → show all lifeforms
+ *   'subset' – specific collection_uid with known lifeform mapping → show subset
+ *   'none'   – other collection_uid → hide lifeform picker entirely
+ */
+const collectionLifeforms = {
+	co10: ['amphibians', 'reptiles'],  // herpetology
+}
+
+export function getLifeformMode() {
+	const m = extraFq.match(/^collection_uid[=:](.+)$/)
+	if (!m) return 'all'          // institution_uid or no filter
+	return collectionLifeforms[m[1]] ? 'subset' : 'none'
+}
+
+export function getLifeformAllowList() {
+	const m = extraFq.match(/^collection_uid[=:](.+)$/)
+	return m && collectionLifeforms[m[1]] ? collectionLifeforms[m[1]] : null
+}

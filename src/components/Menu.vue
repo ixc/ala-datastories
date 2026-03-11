@@ -1,5 +1,5 @@
 <template>
-	<nav>
+	<nav v-if="!extraFq">
 		<div class="ala-logo">
 			<a href="https://ala.org.au">
 				<img src="@/assets/img/ALA_Logo_Inline_REV-RGB.png" alt=""/>
@@ -27,6 +27,8 @@
 </template>
 
 <script>
+import { extraFq } from '../apiConfig.js'
+
 export default {
 
   name: 'Menu',
@@ -35,7 +37,8 @@ export default {
 
   data () {
     return {
-    	dropDownActive:false
+    	dropDownActive:false,
+    	extraFq,
     }
   },
 
@@ -90,7 +93,7 @@ export default {
 		height:100%;
 		width:100%;
 		fit-content:contain;
-		
+
 	}
 
 
@@ -108,7 +111,7 @@ export default {
 /*		margin-right:0.5rem;*/
 		margin:0 0.25em;
 		vertical-align: text-bottom;
-		
+
 	}
 
 	.ds-menu{

@@ -1,35 +1,35 @@
 <template>
 
 	<div class="section-wrapper">
-		<div class="lifeform-wrapper">
-	
+		<div class="lifeform-wrapper" v-if="lifeformMode !== 'none'">
+
 			<h4>Lifeform</h4>
 			<div class="filterTag sgSelect" @click="setSpeciesGroupFilter({value:'All'})"
 			:class="{focus: speciesGroupFilter.value == 'All'}">
-            
-              <p class="value">All</p>   
+
+              <p class="value">All</p>
             </div>
 
-			<div class="filterTag sgSelect" v-for="s in speciesGroups" 
+			<div class="filterTag sgSelect" v-for="s in filteredSpeciesGroups"
 			@click="setSpeciesGroupFilter(s)"
 			:class="{focus: speciesGroupFilter.label == s.label}">
-             
+
              <p class="value">
              	<img v-if="s.icon" class="groupIcon" :src="`${siteRoot}/icons/${s.icon}`" alt=""/>
-             {{s.label}}</p>   
+             {{s.label}}</p>
             </div>
 
 		</div>
 
-		<div class="speciesBubble">	
+		<div class="speciesBubble">
 
 			<h4>Common Species</h4>
 
 			<BubbleLayout :species-data="localRanks" :bubbleCount="10" :size="bubbleSize"></BubbleLayout>
 
 			<p class="explainer">Most frequently observed</p>
-			
-			<p class="deeplink"><a class="newtab" target="_blank" 
+
+			<p class="deeplink"><a class="newtab" target="_blank"
 				:href="'https://biocache.ala.org.au/occurrences/search?q='+apiState.query+'&lat='+geoFilter.lat+'&lon='+geoFilter.lon+'&radius='+geoFilter.radius">
 			All species</a>
 			</p>
@@ -54,7 +54,7 @@
 			<p class="explainer">In national lists</p>
 
 			<p class="deeplink">
-				<a class="newtab" target="_blank" 
+				<a class="newtab" target="_blank"
 				:href="'https://biocache.ala.org.au/occurrences/search?q='+apiState.query+'&fq=countryConservation:*&lat='+geoFilter.lat+'&lon='+geoFilter.lon+'&radius='+geoFilter.radius">All threatened species</a>
 			</p>
 
@@ -70,14 +70,15 @@
 		</div>
 
 	</div>
-		
-		
+
+
 </template>
 
 <script>
 	import globalRankData from '../assets/data/occurrencerank-50k-total.json'
 	import BubbleLayout from '../components/BubbleLayout.vue'
 	import { apiState } from '../apiState.js'
+	import { getLifeformMode, getLifeformAllowList } from '../apiConfig.js'
 	import axios from 'axios'
 	import * as d3 from 'd3'
 
@@ -99,8 +100,10 @@
 				conservationSpecies:[],
 				speciesCount: 1000,
 				speciesGroupFilter: {value:"All"},
-				// minimum fraction of total local occurrences, for a species to be shown as distinctive 
-				distinctiveMinFraction: 0.001, 
+				lifeformMode: getLifeformMode(),
+				lifeformAllowList: getLifeformAllowList(),
+				// minimum fraction of total local occurrences, for a species to be shown as distinctive
+				distinctiveMinFraction: 0.001,
 				numLocalSpecies: 10,
 				speciesLoaded: false,
 				conservationSpeciesLoaded:false,
@@ -113,6 +116,13 @@
 		},
 
 		computed: {
+
+			filteredSpeciesGroups(){
+				if (this.lifeformAllowList) {
+					return this.speciesGroups.filter(s => this.lifeformAllowList.includes(s.id))
+				}
+				return this.speciesGroups
+			},
 
 			distinctiveRanks(){
 				let dr = this.localRanks.map((s,r) =>{
@@ -129,7 +139,7 @@
 					}
 					return {...s, deltaRank:deltaRank, globalRank: globalRank, relativeFreq: inverseFreq}
 				});
-				dr = dr.filter(s => s.localFreq > this.distinctiveMinFraction); 
+				dr = dr.filter(s => s.localFreq > this.distinctiveMinFraction);
 				let sorted;
 				if (this.distMode == "rank") sorted = dr.sort((a,b) => { return b.deltaRank - a.deltaRank})
 				if (this.distMode == "freq") sorted = dr.sort((a,b) => { return b.relativeFreq - a.relativeFreq})
@@ -144,7 +154,7 @@
 				this.getLocalSpeciesAsync();
 				this.getLocalSpeciesAsync("conservation");
 			},
-			
+
 			'apiState.query'(){
 				// empty filters after a speciesGroup has been removed
 				if (apiState.filters.length == 0){
@@ -162,10 +172,10 @@
 			setSpeciesGroupFilter(f){
 				this.speciesGroupFilter = f;
 				if (f.value == "All"){
-					apiState.clearFilter();	
+					apiState.clearFilter();
 					return;
 				}
-				
+
 				apiState.setFilter({field:'speciesGroup', fieldLabel:'Lifeform',value: f.label, valueLabel: f.label, fq:f.fq, icon:f.icon})
 				this.getLocalSpeciesAsync();
 				this.getLocalSpeciesAsync("conservation");
@@ -196,15 +206,15 @@
 			    try {
 			    	const base = 'https://api.ala.org.au/occurrences/occurrences/search?';
 			      	const response = await axios.get(base,{params: qparams})
-			      	
+
 			      	// conservation species query
 			      	if (conservationQuery){
 			      		if (!response.data.facetResults[0]) {
 			      			this.conservationSpecies = [];
 			      			return;
 			      		} else {
-			      			this.conservationSpecies = response.data.facetResults[0].fieldResult.map(r => { 
-			      					let bits = r.label.split("|"); 
+			      			this.conservationSpecies = response.data.facetResults[0].fieldResult.map(r => {
+			      					let bits = r.label.split("|");
 			      					return {name:bits[0], commonName: bits[2], lsid:bits[1], count: r.count}
 								});
 			      		}
@@ -229,7 +239,7 @@
 			let gf = this.apiState.filterState.speciesGroup
 			if (gf){
 				this.speciesGroupFilter = {value:gf.value, label:gf.valueLabel, fq:gf.fq}
-			} 
+			}
 			this.getLocalSpeciesAsync();
 			this.getLocalSpeciesAsync("conservation");
 		}
@@ -265,6 +275,12 @@
 
 	.rank-footer select{
 		margin-right:2rem;
+	}
+
+	/* When no .lifeform-wrapper is shown, add top padding to bubbles */
+	.section-wrapper > .speciesBubble:first-child,
+	.section-wrapper > .speciesBubble:first-child ~ .speciesBubble {
+		margin-top: 3.5rem;
 	}
 
 	.speciesBubble{
@@ -347,7 +363,7 @@
 		margin-bottom:0;
 		font-size: 90%;
 		padding-top:0;
-		
+
 /*		color: var(--ala-darkgrey);*/
 
 	}
@@ -362,6 +378,6 @@
 
 
 
-	
+
 
 </style>
